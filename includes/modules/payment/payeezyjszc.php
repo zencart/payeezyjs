@@ -248,7 +248,7 @@ class payeezyjszc extends base {
     $payment_amount = $order->info['total'];
     $decimal_places = $currencies->get_decimal_places($order->info['currency']);
     if ($decimal_places > 0) {
-      $payment_amount = $payment_amount * 10 ** $decimal_places; // ALERT: Exponentiation Operator ** requires PHP 5.6
+      $payment_amount = $payment_amount * pow(10, $decimal_places); // Future: Exponentiation Operator ** requires PHP 5.6
     }
 
     // @TODO - consider converting currencies if the gateway requires

@@ -11,7 +11,7 @@ The payment gateway is powered by First Data, and is availalble to all First Dat
 
 This module is compatible with Zen Cart® v1.5.4 and v1.5.5
 
-This module requires minimum PHP 5.6.0
+This module works with PHP 5 and PHP 7
 
 ## Installation
 
