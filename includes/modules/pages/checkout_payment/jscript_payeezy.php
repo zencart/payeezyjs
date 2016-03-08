@@ -7,7 +7,7 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version GIT: $Id: Author: Ian Wilson   New in v1.5.5 $
  */
-if (defined('MODULE_PAYMENT_PAYEEZYJSZC_API_KEY') && MODULE_PAYMENT_PAYEEZYJSZC_API_KEY != '' && defined(MODULE_PAYMENT_PAYEEZYJSZC_STATUS) && MODULE_PAYMENT_PAYEEZYJSZC_STATUS == 'True') {
+if (defined('MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY') && MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY != '' && defined(MODULE_PAYMENT_PAYEEZYJSZC_STATUS) && MODULE_PAYMENT_PAYEEZYJSZC_STATUS == 'True') {
 ?>
 <script type="text/javascript"><!--
 
@@ -100,6 +100,7 @@ var Payeezy = function() {
                   + "&credit_card.exp_date=" + r["exp_month"].replace(/[^0-9]/g,'') + r["exp_year"].replace(/[^0-9]/g,'') 
                   + "&credit_card.cvv=" + r["cvv_code"].replace(/[^0-9]/g,'');
 
+            if (r["currency"]        != undefined) a = a + "&currency=" + encodeURIComponent(r["currency"]);
             if (r["billing.street"]  != undefined) a = a + "&billing_address.street=" + encodeURIComponent(r["billing.street"]);
             if (r["billing.city"]    != undefined) a = a + "&billing_address.city=" + encodeURIComponent(r["billing.city"]);
             if (r["billing.state"]   != undefined) a = a + "&billing_address.state_province=" + encodeURIComponent(r["billing.state"]);
@@ -138,9 +139,9 @@ var responseHandler = function(status, response) {
     var $form = $('form[name="checkout_payment"]');
 
     // alert('Status = ' + status);
-    console.log(response);
 
     if (status != 201) {
+        console.error(response);
         if (response.Error && status != 400) {
             var errormsg = response.Error.messages;
             var errorcode = JSON.stringify(errormsg[0].code, null, 4);
@@ -160,6 +161,7 @@ var responseHandler = function(status, response) {
         $form.find('button').prop('disabled', false);
     } else {
         // alert('success');
+        console.log(response);
         var result = response.token.value;
         $('#payeezyjszc_fdtoken').val(result);
 
