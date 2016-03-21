@@ -511,9 +511,18 @@ class payeezyjszc extends base {
     curl_setopt($request, CURLOPT_HEADER, false);
     curl_setopt($request, CURLOPT_HTTPHEADER, $curlHeaders);
     $response = curl_exec($request);
+
+    $commErrNo = curl_errno($request);
+    if ($commErrNo == 35) {
+      trigger_error('ALERT: Could not process Payeezy transaction via normal CURL communications. Your server is encountering connection problems using TLS 1.2 ... because your hosting company cannot autonegotiate a secure protocol with modern security protocols. We will try the transaction again, but this is resulting in a very long delay for your customers, and could result in them attempting duplicate purchases. Get your hosting company to update their TLS capabilities ASAP.', E_USER_NOTICE);
+      curl_setopt($request, CURLOPT_SSLVERSION, 6); // Using the defined value of 6 instead of CURL_SSLVERSION_TLSv1_2 since these outdated hosts also don't properly implement this constant either.
+      $response = curl_exec($request);
+    }
+
     if (FALSE === $response) {
       $this->commError = curl_error($request);
       $this->commErrNo = curl_errno($request);
+      trigger_error('Payeezy communications failure. ' . $this->commErrNo . ' - ' . $this->commError, E_USER_NOTICE);
     }
     $httpcode = curl_getinfo($request, CURLINFO_HTTP_CODE);
     $this->commInfo = curl_getinfo($request);
