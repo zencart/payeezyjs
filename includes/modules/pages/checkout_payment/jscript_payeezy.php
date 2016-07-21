@@ -1,13 +1,13 @@
 <?php
 /**
- * Javascript to prep functionality for PayEezy payment module
+ * Javascript to prep functionality for Payeezy payment module
  *
  * @package payeezy
  * @copyright Copyright 2003-2016 Zen Cart Development Team
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version GIT: $Id: Author: Ian Wilson   New in v1.5.5 $
  */
-if (defined('MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY') && MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY != '' && defined(MODULE_PAYMENT_PAYEEZYJSZC_STATUS) && MODULE_PAYMENT_PAYEEZYJSZC_STATUS == 'True') {
+if (defined(MODULE_PAYMENT_PAYEEZYJSZC_STATUS) && MODULE_PAYMENT_PAYEEZYJSZC_STATUS == 'True' && ((defined('MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY') && MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY != '') || defined('MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY_SANDBOX') && MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY_SANDBOX != '')) {
 ?>
 <script type="text/javascript"><!--
 
@@ -50,11 +50,6 @@ var Payeezy = function() {
     }
     return {
         createToken: function(e) {
-            // Live
-            //var n = "api.payeezy.com";
-            // Sandbox
-            //var n = "api-cert.payeezy.com";
-
             this["clientCallback"] = e;
             var r = t();
             var i = 0;
@@ -181,7 +176,7 @@ var responseHandler = function(status, response) {
     }
 };
 var apiKey = '<?php echo MODULE_PAYMENT_PAYEEZYJSZC_API_KEY; ?>';
-var js_security_key = '<?php echo MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY; ?>';
+var js_security_key = '<?php echo constant('MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY' . (MODULE_PAYMENT_PAYEEZYJSZC_TESTING_MODE == 'Sandbox' ? '_SANDBOX' : '')); ?>';
 var ta_token = '<?php echo MODULE_PAYMENT_PAYEEZYJSZC_TESTING_MODE == 'Sandbox' ? 'NOIW' : MODULE_PAYMENT_PAYEEZYJSZC_TATOKEN; ?>';
 var auth = 'false'; // true is for $0 auths
 var apiEndpoint = '<?php echo MODULE_PAYMENT_PAYEEZYJSZC_TESTING_MODE == 'Sandbox' ? 'api-cert.payeezy.com' : 'api.payeezy.com'; ?>';
