@@ -10,7 +10,7 @@
  * For merchants domiciled outside the U.S. please contact your local technical support team for assistance with preparing your account to work with Payeezy JS and Token-Based transactions.
  *
  * @package payeezy
- * @copyright Copyright 2003-2016 Zen Cart Development Team
+ * @copyright Copyright 2003-2017 Zen Cart Development Team
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version $Id: Author: Ian Wilson <ian@zen-cart.com> New in v1.5.5 $
  */
@@ -27,7 +27,7 @@ class payeezyjszc extends base {
   /**
    * $moduleVersion is the plugin version number
    */
-  var $moduleVersion = '0.93';
+  var $moduleVersion = '0.94';
   /**
    * $title is the displayed name for this payment method
    *
@@ -244,7 +244,7 @@ class payeezyjszc extends base {
   }
 
   function before_process() {
-    global $messageStack, $order, $currencies;
+    global $messageStack, $order, $currencies, $order_totals;
 
     if (!isset($_POST[$this->code . '_fdtoken']) || trim($_POST[$this->code . '_fdtoken']) == '') {
       $messageStack->add_session('checkout_payment', MODULE_PAYMENT_PAYEEZYJSZC_ERROR_MISSING_FDTOKEN, 'error');
@@ -260,16 +260,37 @@ class payeezyjszc extends base {
     $order->info['cc_expires'] = '';
     $order->info['cc_cvv']     = '***';
 
-
-    // @TODO - consider converting currencies if the gateway requires
-
-
     // format purchase amount 
     $payment_amount = $order->info['total'];
     $decimal_places = $currencies->get_decimal_places($order->info['currency']);
     if ($decimal_places > 0) {
       $payment_amount = $payment_amount * pow(10, $decimal_places); // Future: Exponentiation Operator ** requires PHP 5.6
     }
+
+  // lookup shipping and discount amounts
+    $args['x_freight'] = $args['x_tax'] = $args['discount_amount'] = 0;
+    if (sizeof($order_totals)) {
+      for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
+        if ($order_totals[$i]['code'] == '') continue;
+        if (in_array($order_totals[$i]['code'], array('ot_total','ot_subtotal','ot_tax','ot_shipping', 'insurance'))) {
+          if ($order_totals[$i]['code'] == 'ot_shipping') $args['x_freight'] = round($order_totals[$i]['value'],2);
+          if ($order_totals[$i]['code'] == 'ot_tax')      $args['x_tax'] = round($order_totals[$i]['value'],2);
+        } else {
+          // handle credits
+          global ${$order_totals[$i]['code']};
+          if ((substr($order_totals[$i]['text'], 0, 1) == '-') || (isset(${$order_totals[$i]['code']}->credit_class) && ${$order_totals[$i]['code']}->credit_class == true)) {
+            $args['discount_amount'] += round($order_totals[$i]['value'], 2);
+          }
+        }
+      }
+    }
+
+
+
+    // @TODO - consider converting currencies if the gateway requires
+  $exchange_factor = 1;
+
+
 
 // sandbox testing
 // $payment_amount = 520200;
@@ -288,8 +309,84 @@ class payeezyjszc extends base {
     $payload['token']['token_data']['cvv'] = strval(preg_replace('/[^0-9]/', '', $_POST['cc_cvv']));
     $payload['token']['token_data']['type'] = preg_replace('/[^a-z ]/i', '', $_POST['cc_type']);
 
+    $payload['soft_descriptors'] = [
+    	'dba_name' => STORE_NAME, // recommended max 22 chars
+    	// 'street' => '',
+    	'city' => HTTP_SERVER, // for ecommerce sites they suggest using the site URL here
+    	// 'region' => '',
+    	// 'mid' => '',
+    	// 'mcc' => '',
+    	'postal_code' => SHIPPING_ORIGIN_ZIP,
+    	// 'country_code' => '',
+    	'merchant_contact_info' => STORE_TELEPHONE_CUSTSERVICE,
+    ];
+
+    $payload['billing_address'] = [
+     'name' => $order->billing['firstname'] . ' ' . $order->billing['lastname'],
+     'street' => $order->billing['street_address'],
+     'city' => $order->billing['city'],
+     'state_province' => $order->billing['state'],
+     'zip_postal_code' => $order->billing['postcode'],
+     'country' => $order->billing['country']['title'],
+     'email' => $order->customer['email_address'],
+     'phone' => [ 'type' => 'D', 'number' => $order->customer['telephone'] ],
+    ];
+
+  	$payload['level2'] = [
+      'tax1_amount'=> $args['x_tax'],
+      // 'tax1_number'=> '',  // number of the tax type, per the API chart
+      // 'tax2_amount'=> $args['x_tax2'],
+      // 'tax2_number'=> '',  // number of the tax type, per the API chart
+      'customer_ref'=> $_SESSION['customer_id'],  // customer number, or PO number, or invoice number, or order number
+    ];
+
+	  $payload['level3'] = [
+            'alt_tax_amount'=> 0,
+            'alt_tax_id'=> 0,
+            'discount_amount'=> $args['discount_amount'],
+            // 'duty_amount'=> 0,
+            'freight_amount'=> $args['x_freight'],
+            'ship_from_zip'=> SHIPPING_ORIGIN_ZIP,
+            'ship_to_address'=> [
+              'customer_number'=> $_SESSION['customer_id'],
+              'address_1'=> $order->delivery['street_address'],
+              'city'=> $order->delivery['city'],
+              'state'=> $order->delivery['state'],
+              'zip'=> $order->delivery['postcode'],
+              'country'=> $order->delivery['country']['title'],
+              'email'=> $order->customer['email_address'],
+              'name'=> $order->delivery['firstname'] . ' ' . $order->delivery['lastname'],
+              'phone'=> $order->customer['telephone'],
+            ],
+        ];
+
+    // Add line-item data to transaction payload
+    if (sizeof($order->products) < 100) {
+      $product_code = $commodity_code = ''; // not submitted
+      $payload['level3']['line_items'] = array();
+      for ($i=0; $i<sizeof($order->products); $i++) {
+        $p = $order->products[$i];
+        $payload['level3']['line_items'][] = (object)[
+          'description'=> $p['name'],
+          'quantity'=> $p['qty'],
+          // 'commodity_code'=> $commodity_code,
+          // 'discount_amount'=> '',
+          // 'discount_indicator'=> '',
+          // 'gross_net_indicator'=> '',
+          'line_item_total'=> number_format(zen_add_tax($p['final_price'] * $exchange_factor, $p['tax']) * $p['qty'],2),
+          // 'product_code'=> $product_code,
+          'tax_amount'=> number_format(zen_calculate_tax($p['final_price'] * $exchange_factor, $p['tax']),2),
+          'tax_rate'=> round($p['tax'],8),
+          // 'tax_type'=> '',
+          'unit_cost'=> number_format($p['final_price'] * $exchange_factor,2),
+          // 'unit_of_measure'=> '',
+        ];
+      }
+    }
+
     $payload_logged = $payload; 
-    $payload = json_encode($payload, JSON_FORCE_OBJECT);
+    $payload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
     // submit transaction
     $response = $this->postTransaction($payload, $this->hmacAuthorizationToken($payload));
 
