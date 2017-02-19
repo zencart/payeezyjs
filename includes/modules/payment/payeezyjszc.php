@@ -312,7 +312,7 @@ class payeezyjszc extends base {
     $payload['soft_descriptors'] = [
     	'dba_name' => STORE_NAME, // recommended max 22 chars
     	// 'street' => '',
-    	'city' => HTTP_SERVER, // for ecommerce sites they suggest using the site URL here
+    	'city' => preg_replace('~https?://~', '', HTTP_SERVER), // for ecommerce sites they suggest using the site URL here
     	// 'region' => '',
     	// 'mid' => '',
     	// 'mcc' => '',
@@ -383,6 +383,16 @@ class payeezyjszc extends base {
         ];
       }
     }
+
+
+// FOR TROUBLESHOOTING ONLY
+// TO TEMPORARILY DISABLE TRANSMISSION OF soft_descriptors OR level 2/3 data, UNCOMMENT THE FOLLOWING LINES:
+//     unset($payload['soft_descriptors']);
+ //    unset($payload['level2']);
+ //    unset($payload['level3']);
+ //    unset($payload['billing_address']);
+
+
 
     $payload_logged = $payload; 
     $payload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
