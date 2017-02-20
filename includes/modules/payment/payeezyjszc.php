@@ -206,8 +206,7 @@ class payeezyjszc extends base
                 ],
                 [
                     'title' => MODULE_PAYMENT_PAYEEZYJSZC_TEXT_CREDIT_CARD_NUMBER,
-                    'field' => zen_draw_input_field($this->code . '_cc_number', '',
-                        'payeezy-data="cc_number" id="' . $this->code . '_cc-number"' . $onFocus . ' autocomplete="off"'),
+                    'field' => '<input type="text" payeezy-data="cc_number" id="' . $this->code . '_cc-number"' . $onFocus . ' autocomplete="off">',
                     'tag'   => $this->code . '_cc-number',
                 ],
                 [
@@ -218,7 +217,7 @@ class payeezyjszc extends base
                 ],
                 [
                     'title' => MODULE_PAYMENT_PAYEEZYJSZC_TEXT_CVV,
-                    'field' => zen_draw_input_field($this->code . '_cc_cvv', '', 'size="4" maxlength="4"' . 'payeezy-data="cvv_code" id="' . $this->code . '_cc-cvv"' . $onFocus . ' autocomplete="off"'),
+                    'field' => '<input type="number" size="4" maxlength="4" payeezy-data="cvv_code" id="' . $this->code . '_cc-cvv"' . $onFocus . ' autocomplete="off">',
                     'tag'   => $this->code . '_cc-cvv',
                 ],
                 [
