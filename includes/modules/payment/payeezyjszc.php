@@ -244,7 +244,7 @@ class payeezyjszc extends base {
   }
 
   function before_process() {
-    global $messageStack, $order, $currencies, $order_totals;
+    global $messageStack, $order, $order_totals;
 
     if (!isset($_POST[$this->code . '_fdtoken']) || trim($_POST[$this->code . '_fdtoken']) == '') {
       $messageStack->add_session('checkout_payment', MODULE_PAYMENT_PAYEEZYJSZC_ERROR_MISSING_FDTOKEN, 'error');
@@ -252,20 +252,13 @@ class payeezyjszc extends base {
     }
     
     $order->info['cc_owner']   = $_POST['cc_owner'];
-    $order->info['cc_type'] = $_POST['cc_type'];
+    $order->info['cc_type']    = $_POST['cc_type'];
     $order->info['cc_number']  = $_POST['cc_number'];
     if (!strpos($order->info['cc_number'], 'XX')) {
       $order->info['cc_number']  = str_pad(substr($_POST['cc_number'], -4), strlen($_POST['cc_number']), "X", STR_PAD_LEFT);
     }
     $order->info['cc_expires'] = '';
     $order->info['cc_cvv']     = '***';
-
-    // format purchase amount 
-    $payment_amount = $order->info['total'];
-    $decimal_places = $currencies->get_decimal_places($order->info['currency']);
-    if ($decimal_places > 0) {
-      $payment_amount = $payment_amount * pow(10, $decimal_places); // Future: Exponentiation Operator ** requires PHP 5.6
-    }
 
   // lookup shipping and discount amounts
     $args['x_freight'] = $args['x_tax'] = $args['discount_amount'] = 0;
@@ -300,7 +293,7 @@ class payeezyjszc extends base {
     $payload['merchant_ref'] = substr(bin2hex(openssl_random_pseudo_bytes(64)), 0, 20);
     $payload['transaction_type'] = MODULE_PAYMENT_PAYEEZYJSZC_TRANSACTION_TYPE;
     $payload['method'] = 'token';
-    $payload['amount'] = (int)$payment_amount;
+    $payload['amount'] = (int)$this->format_amount_for_payeezy($order->info['total']);
     $payload['currency_code'] = strtoupper($order->info['currency']);
     $payload['token'] = array('token_type' => 'FDToken');
     $payload['token']['token_data']['value'] = preg_replace('/[^0-9a-z\-]/i', '', $_POST[$this->code . '_fdtoken']);
@@ -333,9 +326,9 @@ class payeezyjszc extends base {
     ];
 
   	$payload['level2'] = [
-      'tax1_amount'=> $args['x_tax'],
+      'tax1_amount'=> $this->format_amount_for_payeezy($args['x_tax']),
       // 'tax1_number'=> '',  // number of the tax type, per the API chart
-      // 'tax2_amount'=> $args['x_tax2'],
+      // 'tax2_amount'=> $this->format_amount_for_payeezy($args['x_tax2']),
       // 'tax2_number'=> '',  // number of the tax type, per the API chart
       'customer_ref'=> $_SESSION['customer_id'],  // customer number, or PO number, or invoice number, or order number
     ];
@@ -343,9 +336,9 @@ class payeezyjszc extends base {
 	  $payload['level3'] = [
             'alt_tax_amount'=> 0,
             'alt_tax_id'=> 0,
-            'discount_amount'=> $args['discount_amount'],
+            'discount_amount'=> $this->format_amount_for_payeezy($args['discount_amount']),
             // 'duty_amount'=> 0,
-            'freight_amount'=> $args['x_freight'],
+            'freight_amount'=> $this->format_amount_for_payeezy($args['x_freight']),
             'ship_from_zip'=> SHIPPING_ORIGIN_ZIP,
             'ship_to_address'=> [
               'customer_number'=> $_SESSION['customer_id'],
@@ -373,12 +366,12 @@ class payeezyjszc extends base {
           // 'discount_amount'=> '',
           // 'discount_indicator'=> '',
           // 'gross_net_indicator'=> '',
-          'line_item_total'=> number_format(zen_add_tax($p['final_price'] * $exchange_factor, $p['tax']) * $p['qty'],2),
+          'line_item_total'=> $this->format_amount_for_payeezy(round(zen_add_tax($p['final_price'] * $exchange_factor, $p['tax']) * $p['qty'],2)),
           // 'product_code'=> $product_code,
-          'tax_amount'=> number_format(zen_calculate_tax($p['final_price'] * $exchange_factor, $p['tax']),2),
+          'tax_amount'=> $this->format_amount_for_payeezy(round(zen_calculate_tax($p['final_price'] * $exchange_factor, $p['tax']),2)),
           'tax_rate'=> round($p['tax'],8),
           // 'tax_type'=> '',
-          'unit_cost'=> number_format($p['final_price'] * $exchange_factor,2),
+          'unit_cost'=> $this->format_amount_for_payeezy(round($p['final_price'] * $exchange_factor,2)),
           // 'unit_of_measure'=> '',
         ];
       }
@@ -602,6 +595,19 @@ class payeezyjszc extends base {
        'MODULE_PAYMENT_PAYEEZYJSZC_JSSECURITY_KEY_SANDBOX',
        'MODULE_PAYMENT_PAYEEZYJSZC_LOGGING',
      );
+  }
+
+  private function format_amount_for_payeezy($amount)
+  {
+    global $currencies, $order;
+    $decimal_places = 2;
+    if (isset($order) && isset($order->info['currency'])) {
+      $decimal_places = $currencies->get_decimal_places($order->info['currency']);
+    }
+    if ($decimal_places > 0) {
+      $amount = $amount * pow(10, $decimal_places); // Future: Exponentiation Operator ** requires PHP 5.6
+    }
+    return $amount;
   }
 
   private function hmacAuthorizationToken($payload)
