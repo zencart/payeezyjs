@@ -27,7 +27,7 @@ class payeezyjszc extends base {
   /**
    * $moduleVersion is the plugin version number
    */
-  var $moduleVersion = '0.94';
+  var $moduleVersion = '0.941';
   /**
    * $title is the displayed name for this payment method
    *
