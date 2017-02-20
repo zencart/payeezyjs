@@ -432,7 +432,8 @@ class payeezyjszc extends base {
     // "token":{"token_type":"FDToken",
     //   "token_data":{"type":"Mastercard",
     //   "cardholder_name":"xyz",
-    //   "exp_date":"0430","value":"2833693200041732"}
+    //   "exp_date":"0430",
+    //   "value":"2833693200041732"}
     // },
     // "bank_resp_code":"100",
     // "bank_message":"Approved",
@@ -441,7 +442,7 @@ class payeezyjszc extends base {
 
       if ($response['transaction_status'] == 'approved') {
         $this->auth_code = $response['transaction_tag'];
-        $this->transaction_id = $response['transaction_id'] . ' ' . $response['transaction_tag'];
+        $this->transaction_id = $response['transaction_id'] . ' Auth/Tag: ' . $response['transaction_tag'] . ' Amount: ' . number_format($response['amount']/100, 2, '.', '');
         $this->transaction_messages = $response['bank_resp_code'] . ' ' . $response['bank_message'] . ' ' . $response['gateway_resp_code'] . ' ' . $response['gateway_message'];
         if (isset($response['avs']) && isset($this->avs_codes[$response['avs']])) $this->transaction_messages .= "\n" . 'AVS: ' . $this->avs_codes[$response['avs']];
         if (isset($response['cvv2']) && isset($this->cvv_codes[$response['cvv2']])) $this->transaction_messages .= "\n" . 'CVV: ' . $this->cvv_codes[$response['cvv2']];
