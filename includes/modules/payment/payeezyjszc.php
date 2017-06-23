@@ -31,7 +31,7 @@ class payeezyjszc extends base
     /**
      * $moduleVersion is the plugin version number
      */
-    var $moduleVersion = '0.941';
+    var $moduleVersion = '0.942';
     /**
      * $title is the displayed name for this payment method
      *
@@ -704,11 +704,13 @@ class payeezyjszc extends base
         if (isset($order) && isset($order->info['currency'])) {
             $decimal_places = $currencies->get_decimal_places($order->info['currency']);
         }
-        if ($decimal_places > 0) {
-            $amount = $amount * pow(10, $decimal_places); // Future: Exponentiation Operator ** requires PHP 5.6
-        }
+        if ((int)$decimal_places === 0) return (int)$amount;
 
-        return $amount;
+        // older way
+        return (int)(string)(round($amount, $decimal_places) * pow(10, $decimal_places));
+
+        // Requires PHP 5.6 or newer:
+        return (int)(string)(round($amount, $decimal_places) * 10 ** $decimal_places);
     }
 
     private function hmacAuthorizationToken($payload)

@@ -24,7 +24,7 @@ Simply upload these files into the corresponding folders on your own store:
 
 `/includes/modules/pages/checkout_payment/jscript_payeezy.php`
 
-**Note: You should not copy the README.md, LICENSE or changelog.txt files to your live server.**
+**Note: You should not copy the README.md, LICENSE files to your live server.**
  
 ### Admin module configuration
 This module requires that you enter 5 configuration settings from your Payeezy and GGe4 account:

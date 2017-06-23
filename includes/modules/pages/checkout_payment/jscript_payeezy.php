@@ -3,7 +3,7 @@
  * Javascript to prep functionality for Payeezy payment module
  *
  * @package payeezy
- * @copyright Copyright 2003-2016 Zen Cart Development Team
+ * @copyright Copyright 2003-2017 Zen Cart Development Team
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version GIT: $Id: Author: Ian Wilson   New in v1.5.5 $
  */
@@ -185,7 +185,7 @@ var apiEndpoint = '<?php echo MODULE_PAYMENT_PAYEEZYJSZC_TESTING_MODE == 'Sandbo
 
 jQuery(function($) {
     $('form[name="checkout_payment"]').submit(function(e) {
-        if($('#pmt-payeezyjszc').is(':checked') || this['payment'].value == 'payeezyjszc') {
+        if($('#pmt-payeezyjszc').is(':checked') || this['payment'].value == 'payeezyjszc' || document.getElementById('pmt-payeezyjszc').checked == true) {
             var $form = $(this);
             $form.find('button').prop('disabled', true);
             e.preventDefault();
