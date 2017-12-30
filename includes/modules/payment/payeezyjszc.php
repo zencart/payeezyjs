@@ -31,7 +31,7 @@ class payeezyjszc extends base
     /**
      * $moduleVersion is the plugin version number
      */
-    var $moduleVersion = '0.97';
+    var $moduleVersion = '0.98';
     /**
      * $title is the displayed name for this payment method
      *
@@ -81,7 +81,6 @@ class payeezyjszc extends base
 
         $this->code  = 'payeezyjszc';
         $this->title = MODULE_PAYMENT_PAYEEZYJSZC_TEXT_CATALOG_TITLE; // Payment module title in Catalog
-        $this->mode  = MODULE_PAYMENT_PAYEEZYJSZC_TESTING_MODE;
         if (IS_ADMIN_FLAG === true) {
             $this->title = MODULE_PAYMENT_PAYEEZYJSZC_TEXT_ADMIN_TITLE;
             if (defined('MODULE_PAYMENT_PAYEEZYJSZC_STATUS')) {
@@ -99,8 +98,12 @@ class payeezyjszc extends base
         }
 
         $this->description = 'PayeezyJS ' . $this->moduleVersion . '<br>' . MODULE_PAYMENT_PAYEEZYJSZC_TEXT_DESCRIPTION;
-        $this->enabled     = ((MODULE_PAYMENT_PAYEEZYJSZC_STATUS == 'True') ? true : false);
-        $this->sort_order  = MODULE_PAYMENT_PAYEEZYJSZC_SORT_ORDER;
+        $this->enabled     = (defined('MODULE_PAYMENT_PAYEEZYJSZC_STATUS') && MODULE_PAYMENT_PAYEEZYJSZC_STATUS == 'True');
+        $this->sort_order  = defined('MODULE_PAYMENT_PAYEEZYJSZC_SORT_ORDER') ? MODULE_PAYMENT_PAYEEZYJSZC_SORT_ORDER : null;
+
+        if (null === $this->sort_order) return false;
+
+        $this->mode  = MODULE_PAYMENT_PAYEEZYJSZC_TESTING_MODE;
 
         // determine order-status for transactions
         if ((int)MODULE_PAYMENT_PAYEEZYJSZC_ORDER_STATUS_ID > 0) {
@@ -157,7 +160,7 @@ class payeezyjszc extends base
         global $order;
 
         // Payeezy currently only accepts  "American Express", "Visa", "Mastercard", "Discover", "JCB", "Diners Club"
-        $cc_types = [];
+        $cc_types = array();
         if (CC_ENABLED_VISA == 1) {
             $cc_types[] = ['id' => 'Visa', 'text' => 'Visa'];
         }
@@ -339,7 +342,7 @@ class payeezyjszc extends base
 // $payment_amount = 520200;
 
         // prepare data for submission
-        $payload = [];
+        $payload = array();
 
         $payload['merchant_ref']     = substr(bin2hex(openssl_random_pseudo_bytes(64)), 0, 20);
         $payload['transaction_type'] = MODULE_PAYMENT_PAYEEZYJSZC_TRANSACTION_TYPE;
@@ -414,7 +417,7 @@ class payeezyjszc extends base
             if (count($order->products) < 100) {
                 $product_code = $commodity_code = ''; // not submitted
 
-                $payload['level3']['line_items'] = [];
+                $payload['level3']['line_items'] = array();
                 foreach ($order->products as $p) {
                     $payload['level3']['line_items'][] = (object)[
                         'description'     => $p['name'],
@@ -564,7 +567,7 @@ class payeezyjszc extends base
                 // 258 = soft_descriptors not allowed/configured on this merchant account
                 // 260 = AVS - Authorization network could not reach the bank which issued the card
                 // 264 = Duplicate transaction; rejected.
-                // 301 = Issuer Unavailable. Try again. 
+                // 301 = Issuer Unavailable. Try again.
                 // 303 = (Generic) Processor Decline: no other explanation offered
                 // 351, 353, 354 = Transarmor errors
 
@@ -574,7 +577,7 @@ class payeezyjszc extends base
                 //     $this->logTransactionData($response, $payload_logged);
                 // }
 
-                // check for soft-descriptor failure, and resubmit without 
+                // check for soft-descriptor failure, and resubmit without
                 if ($response['bank_resp_code'] == 258 && MODULE_PAYMENT_PAYEEZYJSZC_SEND_SOFT_DESCRIPTORS == 'Yes') {
                     $payload = $payload_logged;
                     unset($payload['soft_descriptors']);
@@ -597,7 +600,7 @@ class payeezyjszc extends base
                     }
                 }
 
-                // check for level 3 failure, and resubmit without 
+                // check for level 3 failure, and resubmit without
                 if ($response['bank_resp_code'] == 243 && MODULE_PAYMENT_PAYEEZYJSZC_SEND_LEVEL3 == 'Yes') {
                     $payload = $payload_logged;
                     unset($payload['level3']);
@@ -947,69 +950,69 @@ class payeezyjszc extends base
 
 // for backward compatibility with older ZC versions before v152 which didn't have this function:
 if (!function_exists('plugin_version_check_for_updates')) {
-      function plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
-      {
-        if ($plugin_file_id == 0) return false;
-        $new_version_available = false;
-        $lookup_index = $errno = 0;
-        $response = $error = '';
-        $url1 = 'https://plugins.zen-cart.com/versioncheck/'.(int)$plugin_file_id;
-        $url2 = 'https://www.zen-cart.com/versioncheck/'.(int)$plugin_file_id;
+  function plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
+  {
+    if ($plugin_file_id == 0) return false;
+    $new_version_available = false;
+    $lookup_index = $errno = 0;
+    $response = $error = '';
+    $url1 = 'https://plugins.zen-cart.com/versioncheck/'.(int)$plugin_file_id;
+    $url2 = 'https://www.zen-cart.com/versioncheck/'.(int)$plugin_file_id;
 
-        if (function_exists('curl_init')) {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL,$url1);
-            curl_setopt($ch, CURLOPT_VERBOSE, 0);
-            curl_setopt($ch, CURLOPT_HEADER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 9);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 9);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Plugin Version Check [' . (int)$plugin_file_id . '] ' . HTTP_SERVER);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $response = curl_exec($ch);
-            $error = curl_error($ch);
-            $errno = curl_errno($ch);
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,$url1);
+        curl_setopt($ch, CURLOPT_VERBOSE, 0);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 9);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 9);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Plugin Version Check [' . (int)$plugin_file_id . '] ' . HTTP_SERVER);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $errno = curl_errno($ch);
 
-            if ($errno > 0) {
-              trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying http instead.");
-              curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url1));
-              $response = curl_exec($ch);
-              $error = curl_error($ch);
-              $errno = curl_errno($ch);
-            }
-            if ($errno > 0) {
-              trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying www instead.");
-              curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url2));
-              $response = curl_exec($ch);
-              $error = curl_error($ch);
-              $errno = curl_errno($ch);
-            }
-            curl_close($ch);
-        } else {
-            $errono = 9999;
-            $error = 'curl_init not found in PHP';
+        if ($errno > 0) {
+          trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying http instead.");
+          curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url1));
+          $response = curl_exec($ch);
+          $error = curl_error($ch);
+          $errno = curl_errno($ch);
         }
-        if ($errno > 0 || $response == '') {
-          trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying file_get_contents() instead.");
-          $ctx = stream_context_create(array('http' => array('timeout' => 5)));
-          $response = file_get_contents($url1, null, $ctx);
-          if ($response === false) {
-            trigger_error('file_get_contents() error checking plugin versions.' . "\nTrying http instead.");
-            $response = file_get_contents(str_replace('tps:', 'tp:', $url1), null, $ctx);
-          }
-          if ($response === false) {
-            trigger_error('file_get_contents() error checking plugin versions.' . "\nAborting.");
-            return false;
-          }
+        if ($errno > 0) {
+          trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying www instead.");
+          curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url2));
+          $response = curl_exec($ch);
+          $error = curl_error($ch);
+          $errno = curl_errno($ch);
         }
-
-        $data = json_decode($response, true);
-        if (!$data || !is_array($data)) return false;
-        // compare versions
-        if (strcmp($data[$lookup_index]['latest_plugin_version'], $version_string_to_compare) > 0) $new_version_available = true;
-        // check whether present ZC version is compatible with the latest available plugin version
-        $zc_version = PROJECT_VERSION_MAJOR . '.' . preg_replace('/[^0-9.]/', '', PROJECT_VERSION_MINOR);
-        if ($strict_zc_version_compare) $zc_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
-        if (!in_array('v'. $zc_version, $data[$lookup_index]['zcversions'])) $new_version_available = false;
-        return ($new_version_available) ? $data[$lookup_index] : false;
+        curl_close($ch);
+    } else {
+        $errono = 9999;
+        $error = 'curl_init not found in PHP';
+    }
+    if ($errno > 0 || $response == '') {
+      trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying file_get_contents() instead.");
+      $ctx = stream_context_create(array('http' => array('timeout' => 5)));
+      $response = file_get_contents($url1, null, $ctx);
+      if ($response === false) {
+        trigger_error('file_get_contents() error checking plugin versions.' . "\nTrying http instead.");
+        $response = file_get_contents(str_replace('tps:', 'tp:', $url1), null, $ctx);
       }
+      if ($response === false) {
+        trigger_error('file_get_contents() error checking plugin versions.' . "\nAborting.");
+        return false;
+      }
+    }
+
+    $data = json_decode($response, true);
+    if (!$data || !is_array($data)) return false;
+    // compare versions
+    if (strcmp($data[$lookup_index]['latest_plugin_version'], $version_string_to_compare) > 0) $new_version_available = true;
+    // check whether present ZC version is compatible with the latest available plugin version
+    $zc_version = PROJECT_VERSION_MAJOR . '.' . preg_replace('/[^0-9.]/', '', PROJECT_VERSION_MINOR);
+    if ($strict_zc_version_compare) $zc_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
+    if (!in_array('v'. $zc_version, $data[$lookup_index]['zcversions'])) $new_version_available = false;
+    return ($new_version_available) ? $data[$lookup_index] : false;
+  }
 }
