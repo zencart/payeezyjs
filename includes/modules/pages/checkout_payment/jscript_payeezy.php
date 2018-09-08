@@ -174,7 +174,7 @@ var responseHandler = function(status, response) {
         var lastFour = cc_num.substr(cc_num.length - 4)
         var firstFour = cc_num.substr(0, 4)
         var new_cc_num = firstFour + '-XXXX-XXXX-' + lastFour;
-        jQuery('#payeezyjszc_cc-number').val(new_cc_num);
+        jQuery('#payeezyjszc_cc_number').val(new_cc_num);
 
         // delay for DOM update
         setTimeout($form.submit(), 800);
