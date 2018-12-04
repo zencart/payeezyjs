@@ -14,9 +14,9 @@
  * REQUIRES PHP 5.4 or newer
  *
  * @package payeezy
- * @copyright Copyright 2003-2017 Zen Cart Development Team
+ * @copyright Copyright 2003-2018 Zen Cart Development Team
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: Author: Ian Wilson <ian@zen-cart.com> New in v1.5.5 $
+ * @version $Id: Author: zcwilt  Modified in v1.5.6 $
  */
 
 // required to prevent PHP 5.3 from throwing errors:
@@ -38,7 +38,7 @@ class payeezyjszc extends base
     /**
      * $moduleVersion is the plugin version number
      */
-    var $moduleVersion = '0.98';
+    var $moduleVersion = '0.99';
     /**
      * $title is the displayed name for this payment method
      *
