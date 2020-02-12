@@ -1,4 +1,4 @@
-# Payeezy JS Payment Module for Zen Cart
+# Payeezy JS (Payments.js Version 1) Payment Module for Zen Cart
 
 ## About
 
@@ -11,7 +11,7 @@ The payment gateway is powered by First Data, and is available to all First Data
 
 This module is compatible with Zen Cart® v1.5.4 and v1.5.5
 
-This module works with PHP 5 and PHP 7
+This module works with PHP 5 up to PHP 7.1. Not tested extensively on higher PHP versions.
 
 ## Installation
 
@@ -47,17 +47,48 @@ It may seem odd, but it starts out with creating a Payeezy Developer account, wh
 1. Merchant Quick Registration
 
  Sign up for a free Payeezy developer account at https://developer.payeezy.com. All you need is your First name, Last name and a valid email address. Note: Portal registration requires a valid e-mail address. Once registered, your email address cannot be changed in future. All e-mails from the Payeezy system will be sent to this registered email address. The e-mail address will not be made public and will only be used if you wish to receive notifications by e-mail. After you provide registration information an email is sent to you with further instructions to activate your account.
-2. Get Certified
+
+2. Get Certified
 
  Payeezy developer accounts need to be certified before being able to perform live transactions.
-  To get certified,    a. Navigate to Account -> Get Certified.    b. Enter your full profile information.    c. Click on “Certify”.    d. Save.   You will be certified after submitting the CERTIFICATION form. This is basically immediate.
-3. Add Merchant(s)   Once your certification is complete, the developer portal will automatically redirect to “Add Merchant” page. Click on "Live" and then click on "Add a merchant".  
-   • If you DO already have a Payeezy merchant account with First Data, select "Add your existing merchant account" and follow the instructions on the screen. In order for this to work, the First Data merchant account must be enabled for Payeezy API. If you are not sure what this is, check with the merchant service provider (ie: call your First Data rep).  
-    • If you DO NOT have a Payeezy merchant account and need to apply for one, select "Sign up for a merchant account" and follow the instructions.
+ 
+ To get certified,  
+  a. Navigate to Account -> Get Certified.  
+  b. Enter your full profile information.  
+  c. Click on “Certify”.  
+  d. Save.  
+ You will be certified after submitting the CERTIFICATION form. This is basically immediate.
+
+3. Add Merchant(s)  
+ Once your certification is complete, the developer portal will automatically redirect to “Add Merchant” page. Click on "Live" and then click on "Add a merchant".  
+ 
+  • If you DO already have a Payeezy merchant account with First Data, select "Add your existing merchant account" and follow the instructions on the screen. In order for this to work, the First Data merchant account must be enabled for Payeezy API. If you are not sure what this is, check with the merchant service provider (ie: call your First Data rep).  
   
- If you are unable to add your merchant account for some reason,  email payeezyboarding@firstdata.com with the Merchant ID (or storeID), DBA name and developer account email address. We (First Data) will add the merchant account to your developer account manually within 2 business days and send you a notification. After your merchant account is added and approved, you will see the `Merchant Token` and `JS Security Key`. The `TA_TOKEN` (or Transarmor token) can be obtained by logging in to https://globalgatewaye4.firstdata.com, navigating to the Terminals page and selecting your terminal. 
+  • If you DO NOT have a Payeezy merchant account and need to apply for one, select "Sign up for a merchant account" and follow the instructions.
+  
+
+ If you are unable to add your merchant account for some reason,  email payeezyboarding@firstdata.com with the Merchant ID (or storeID), DBA name and developer account email address. We (First Data) will add the merchant account to your developer account manually within 2 business days and send you a notification.
+
+ After your merchant account is added and approved, you will see the `Merchant Token` and `JS Security Key`.
+
+ The `TA_TOKEN` (or Transarmor token) can be obtained by logging in to https://globalgatewaye4.firstdata.com, navigating to the Terminals page and selecting your terminal. 
   If the Transarmor token is blank, it means that your account has not been enabled for Transarmor yet. To enable Transarmor for your account, you will need to reach out to your account representative or call 1-855-799-0790. 
   
-4. Create an API -- within Payeezy your registered API gives you a pair of Key/Secret values which allow you to do Payeezy transactions.
- • Login to your Payeezy developer account and navigate to the "APIs" page.    • Click the “+ ADD A NEW API” button.   • On the next screen you name your application. Call it "My Store" or whatever you want to appear on reports.  
- • Choose "Sandbox” and "Live".   • Click on “Create your API”. You will be taken back to the APIs page.   • Click on the API you just created. You will see your `API key` and `API secret`.   5.	Go Live In Zen Cart Enter the following in your Zen Cart module for Payeezy, as you obtained them from the steps above.   •	`API Key`   •	`API Secret`   •	`Merchant Token`   •	`JS_Security_Key`   •	`TA_TOKEN` (Only required for US domiciled merchants; leave blank outside the US)  
+
+4. Create an API -- within Payeezy your registered API gives you a pair of Key/Secret values which allow you to do Payeezy transactions.
+
+ • Login to your Payeezy developer account and navigate to the "APIs" page.   
+ • Click the “+ ADD A NEW API” button.  
+ • On the next screen you name your application. Call it "My Store" or whatever you want to appear on reports.  
+ • Choose "Sandbox” and "Live".  
+ • Click on “Create your API”. You will be taken back to the APIs page.  
+ • Click on the API you just created. You will see your `API key` and `API secret`.   
+
+5.	Go Live In Zen Cart
+ Enter the following in your Zen Cart module for Payeezy, as you obtained them from the steps above.  
+ •	`API Key`  
+ •	`API Secret`  
+ •	`Merchant Token`  
+ •	`JS_Security_Key`  
+ •	`TA_TOKEN` (Only required for US domiciled merchants; leave blank outside the US)  
+
